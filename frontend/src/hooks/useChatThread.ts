@@ -129,24 +129,65 @@ export function useChatThread() {
     [updateCard],
   )
 
-  // Phase 4 stub: prompt invocation lands in Phase 6 (SSE consumption).
-  const runPromptStub = useCallback(
-    async (id: CardId, _prompt: Prompt, args: Record<string, unknown>) => {
+  const runPrompt = useCallback(
+    async (id: CardId, prompt: Prompt, args: Record<string, unknown>) => {
       updateCard(
         id,
         (c) =>
-          ({ ...c, state: "running", args }) as PromptCardData,
+          ({ ...c, state: "running", args, streamed: "" }) as PromptCardData,
       )
-      await new Promise((r) => setTimeout(r, 400))
-      updateCard(
-        id,
-        (c) =>
-          ({
-            ...c,
-            state: "error",
-            error: "Prompt invocation arrives in Phase 6.",
-          }) as PromptCardData,
-      )
+      try {
+        for await (const event of api.invokePrompt(prompt.name, args)) {
+          if (event.type === "prompt_messages") {
+            updateCard(
+              id,
+              (c) =>
+                ({
+                  ...c,
+                  state: "streaming",
+                  messages: event.messages,
+                }) as PromptCardData,
+            )
+          } else if (event.type === "claude_token") {
+            updateCard(
+              id,
+              (c) =>
+                ({
+                  ...c,
+                  state: "streaming",
+                  streamed: (c as PromptCardData).streamed + event.text,
+                }) as PromptCardData,
+            )
+          } else if (event.type === "error") {
+            updateCard(
+              id,
+              (c) =>
+                ({
+                  ...c,
+                  state: "error",
+                  error: event.message,
+                }) as PromptCardData,
+            )
+            return
+          } else if (event.type === "done") {
+            updateCard(
+              id,
+              (c) => ({ ...c, state: "done" }) as PromptCardData,
+            )
+            return
+          }
+        }
+      } catch (err) {
+        updateCard(
+          id,
+          (c) =>
+            ({
+              ...c,
+              state: "error",
+              error: err instanceof Error ? err.message : String(err),
+            }) as PromptCardData,
+        )
+      }
     },
     [updateCard],
   )
@@ -200,10 +241,10 @@ export function useChatThread() {
       }
       setCards((prev) => [...replacePendingForm(prev), card])
       if (!promptNeedsForm(prompt)) {
-        void runPromptStub(id, prompt, {})
+        void runPrompt(id, prompt, {})
       }
     },
-    [runPromptStub],
+    [runPrompt],
   )
 
   const submitForm = useCallback(
@@ -213,9 +254,9 @@ export function useChatThread() {
       if (card.kind === "tool") void runTool(id, card.tool, args)
       else if (card.kind === "resource")
         void runResource(id, card.resource, args)
-      else void runPromptStub(id, card.prompt, args)
+      else void runPrompt(id, card.prompt, args)
     },
-    [runTool, runResource, runPromptStub],
+    [runTool, runResource, runPrompt],
   )
 
   const cancelForm = useCallback((id: CardId) => {
