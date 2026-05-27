@@ -1,20 +1,18 @@
-import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { useServerInfo } from "@/hooks/useServerInfo"
+import { LeftRail, type PrimitiveSelection } from "@/components/LeftRail"
 
 function App() {
-  // Phase 2 smoke test: confirm mock loads. Phase 3 will replace this with real wiring.
-  const serverInfo = useServerInfo()
-  useEffect(() => {
-    if (serverInfo.data) console.log("[mcp:mock] serverInfo", serverInfo.data)
-    if (serverInfo.error) console.error("[mcp:mock] serverInfo failed", serverInfo.error)
-  }, [serverInfo.data, serverInfo.error])
+  const handleSelect = (selection: PrimitiveSelection) => {
+    // Phase 3: log selections so we can verify wiring. Phase 4 replaces this
+    // with appending a card to the chat thread.
+    console.log("[mcp] selected", selection)
+  }
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
       <TopBar />
       <div className="flex min-h-0 flex-1">
-        <LeftRail />
+        <LeftRail onSelect={handleSelect} />
         <ChatThread />
       </div>
     </div>
@@ -53,50 +51,6 @@ function ConnectionPill() {
       <span className="inline-block size-1.5 rounded-full bg-brand" />
       <span>connected</span>
     </div>
-  )
-}
-
-function LeftRail() {
-  return (
-    <aside className="w-[280px] shrink-0 overflow-y-auto border-r border-border bg-background">
-      <nav className="flex flex-col py-5">
-        <RailSection
-          title="Tools"
-          items={["get_papers_of_the_day", "save_arxiv"]}
-        />
-        <RailSection
-          title="Resources"
-          items={[
-            "papers://list",
-            "papers://{id}/pdf",
-            "papers://{id}/markdown",
-          ]}
-        />
-        <RailSection title="Prompts" items={["explain", "newsletter"]} />
-      </nav>
-    </aside>
-  )
-}
-
-function RailSection({ title, items }: { title: string; items: string[] }) {
-  return (
-    <section className="px-5 py-3">
-      <h2 className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80">
-        {title}
-      </h2>
-      <ul className="-mx-1.5">
-        {items.map((item) => (
-          <li key={item}>
-            <button
-              type="button"
-              className="block w-full truncate rounded px-1.5 py-1 text-left font-mono text-[12.5px] text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
-            >
-              {item}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
   )
 }
 
