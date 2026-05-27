@@ -3,6 +3,7 @@ import type { JSX } from "react"
 import type { PromptCardData } from "@/components/cards/types"
 import { ArgumentForm } from "@/components/ArgumentForm"
 import type { ArgumentFormField } from "@/components/ArgumentForm"
+import { MarkdownRenderer } from "@/components/renderers/MarkdownRenderer"
 import { CardShell } from "./CardShell"
 
 interface PromptCardProps {
@@ -77,15 +78,9 @@ export function PromptCard({ card, onSubmit, onCancel }: PromptCardProps): JSX.E
                 </p>
               </div>
             ))}
-          <div className="whitespace-pre-wrap font-serif text-[15px] leading-[1.7] text-foreground">
-            {card.streamed}
-            {card.state === "streaming" && (
-              <span
-                className="ml-0.5 inline-block h-[1em] w-px translate-y-[2px] animate-pulse bg-foreground/60 align-middle"
-                aria-hidden
-              />
-            )}
-          </div>
+          {card.streamed ? (
+            <MarkdownRenderer content={card.streamed} />
+          ) : null}
         </>
       )
     }

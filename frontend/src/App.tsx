@@ -1,9 +1,11 @@
 import { useState } from "react"
+import type { ConnectionState } from "@/api"
 import { Button } from "@/components/ui/button"
 import { ChatThread } from "@/components/ChatThread"
 import { LeftRail, type PrimitiveSelection } from "@/components/LeftRail"
 import { WireLogPane } from "@/components/WireLogPane"
 import { useChatThread } from "@/hooks/useChatThread"
+import { useConnectionState } from "@/hooks/useConnectionState"
 import { useWireLog } from "@/hooks/useWireLog"
 
 function App() {
@@ -16,6 +18,7 @@ function App() {
     cancelForm,
   } = useChatThread()
   const wireLog = useWireLog()
+  const connectionState = useConnectionState()
   const [paneOpen, setPaneOpen] = useState(false)
 
   const handleSelect = (selection: PrimitiveSelection) => {
@@ -30,6 +33,7 @@ function App() {
         paneOpen={paneOpen}
         onTogglePane={() => setPaneOpen((v) => !v)}
         eventCount={wireLog.events.length}
+        connectionState={connectionState}
       />
       <div className="flex min-h-0 flex-1">
         <LeftRail onSelect={handleSelect} />
@@ -54,9 +58,15 @@ interface TopBarProps {
   paneOpen: boolean
   onTogglePane: () => void
   eventCount: number
+  connectionState: ConnectionState
 }
 
-function TopBar({ paneOpen, onTogglePane, eventCount }: TopBarProps) {
+function TopBar({
+  paneOpen,
+  onTogglePane,
+  eventCount,
+  connectionState,
+}: TopBarProps) {
   return (
     <header className="flex h-11 shrink-0 items-center justify-between border-b border-border bg-background px-4">
       <div className="flex items-baseline gap-2">
@@ -69,7 +79,7 @@ function TopBar({ paneOpen, onTogglePane, eventCount }: TopBarProps) {
         </span>
       </div>
       <div className="flex items-center gap-4">
-        <ConnectionPill />
+        <ConnectionPill state={connectionState} />
         <Button
           variant="ghost"
           size="sm"
@@ -91,11 +101,27 @@ function TopBar({ paneOpen, onTogglePane, eventCount }: TopBarProps) {
   )
 }
 
-function ConnectionPill() {
+const CONNECTION_LABEL: Record<ConnectionState, string> = {
+  connected: "connected",
+  reconnecting: "reconnecting…",
+  disconnected: "disconnected",
+  error: "error",
+}
+
+const CONNECTION_DOT: Record<ConnectionState, string> = {
+  connected: "bg-brand",
+  reconnecting: "bg-amber-500 animate-pulse",
+  disconnected: "bg-muted-foreground/50",
+  error: "bg-destructive",
+}
+
+function ConnectionPill({ state }: { state: ConnectionState }) {
   return (
     <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-      <span className="inline-block size-1.5 rounded-full bg-brand" />
-      <span>connected</span>
+      <span
+        className={`inline-block size-1.5 rounded-full ${CONNECTION_DOT[state]}`}
+      />
+      <span>{CONNECTION_LABEL[state]}</span>
     </div>
   )
 }

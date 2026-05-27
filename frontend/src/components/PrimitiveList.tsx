@@ -27,6 +27,7 @@ export function PrimitiveList({ title, items, onSelect }: PrimitiveListProps) {
               <button
                 type="button"
                 onClick={() => onSelect(item.key)}
+                aria-label={item.label}
                 title={item.description}
                 className="block w-full truncate rounded px-1.5 py-1 text-left font-mono text-[12.5px] text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
               >
