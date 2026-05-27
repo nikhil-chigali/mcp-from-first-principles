@@ -1,6 +1,15 @@
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { useServerInfo } from "@/hooks/useServerInfo"
 
 function App() {
+  // Phase 2 smoke test: confirm mock loads. Phase 3 will replace this with real wiring.
+  const serverInfo = useServerInfo()
+  useEffect(() => {
+    if (serverInfo.data) console.log("[mcp:mock] serverInfo", serverInfo.data)
+    if (serverInfo.error) console.error("[mcp:mock] serverInfo failed", serverInfo.error)
+  }, [serverInfo.data, serverInfo.error])
+
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
       <TopBar />
