@@ -1,0 +1,22 @@
+[project]
+name = "mcp-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "arxiv>=4.0.0",
+    "beautifulsoup4>=4.14.3",
+    "loguru>=0.7.3",
+    "mcp[cli]>=1.27.1",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.1",
+    "pymupdf4llm>=1.27.2.3",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
