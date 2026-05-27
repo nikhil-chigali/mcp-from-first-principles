@@ -2,6 +2,9 @@ import type { JSX } from "react"
 import type { ResourceCardData } from "@/components/cards/types"
 import { isTemplateResource } from "@/api"
 import { ArgumentForm, type ArgumentFormField } from "@/components/ArgumentForm"
+import { JsonRenderer } from "@/components/renderers/JsonRenderer"
+import { MarkdownRenderer } from "@/components/renderers/MarkdownRenderer"
+import { PdfRenderer } from "@/components/renderers/PdfRenderer"
 import { CardShell } from "./CardShell"
 
 interface ResourceCardProps {
@@ -18,26 +21,23 @@ export function ResourceCard({ card, onSubmit, onCancel }: ResourceCardProps): J
   const renderResult = (): JSX.Element | null => {
     const result = card.result
     if (!result) return null
-    const mimeType = result.mimeType
+    const mime = result.mimeType
 
-    if (mimeType.startsWith("application/pdf")) {
-      return (
-        <>
-          <a
-            href={result.content}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-[13px] text-foreground underline decoration-muted-foreground/40 underline-offset-2 hover:decoration-foreground"
-          >
-            {result.content} ↗
-          </a>
-          <p className="mt-2 font-serif text-[12.5px] italic text-muted-foreground/70">
-            PDF embed lands in Phase 5.
-          </p>
-        </>
-      )
+    if (mime.startsWith("application/pdf")) {
+      return <PdfRenderer url={result.content} />
     }
-
+    if (mime.startsWith("application/json")) {
+      let value: unknown = result.content
+      try {
+        value = JSON.parse(result.content)
+      } catch {
+        // fall back to rendering the raw string
+      }
+      return <JsonRenderer value={value} />
+    }
+    if (mime.startsWith("text/markdown")) {
+      return <MarkdownRenderer content={result.content} />
+    }
     return (
       <pre className="overflow-x-auto rounded bg-muted/40 p-3 font-mono text-[12.5px] leading-relaxed text-foreground">
         {result.content}

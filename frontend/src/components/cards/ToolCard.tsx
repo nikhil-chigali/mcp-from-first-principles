@@ -1,7 +1,29 @@
 import type { JSX } from "react"
+import type { ToolCallResult } from "@/api"
 import type { ToolCardData } from "@/components/cards/types"
 import { ArgumentForm, type ArgumentFormField } from "@/components/ArgumentForm"
+import { JsonRenderer } from "@/components/renderers/JsonRenderer"
+import { MarkdownRenderer } from "@/components/renderers/MarkdownRenderer"
+import { PdfRenderer } from "@/components/renderers/PdfRenderer"
 import { CardShell } from "./CardShell"
+
+function renderResult(result: ToolCallResult): JSX.Element {
+  const mime = result.mimeType
+  if (mime.startsWith("application/json")) {
+    return <JsonRenderer value={result.result} />
+  }
+  if (mime.startsWith("text/markdown")) {
+    return <MarkdownRenderer content={String(result.result)} />
+  }
+  if (mime.startsWith("application/pdf")) {
+    return <PdfRenderer url={String(result.result)} />
+  }
+  return (
+    <pre className="overflow-x-auto rounded bg-muted/40 p-3 font-mono text-[12.5px] leading-relaxed text-foreground">
+      {String(result.result)}
+    </pre>
+  )
+}
 
 interface ToolCardProps {
   card: ToolCardData
@@ -55,13 +77,6 @@ export function ToolCard({ card, onSubmit, onCancel }: ToolCardProps): JSX.Eleme
     if (card.state === "done") {
       const hasArgs = card.args && Object.keys(card.args).length > 0
       const result = card.result
-      const mimeType = result?.mimeType ?? ""
-      const isText = mimeType.startsWith("text/")
-      const content = result
-        ? isText
-          ? String(result.result)
-          : JSON.stringify(result.result, null, 2)
-        : ""
 
       return (
         <>
@@ -70,11 +85,7 @@ export function ToolCard({ card, onSubmit, onCancel }: ToolCardProps): JSX.Eleme
               args: {JSON.stringify(card.args)}
             </p>
           ) : null}
-          {result ? (
-            <pre className="overflow-x-auto rounded bg-muted/40 p-3 font-mono text-[12.5px] leading-relaxed text-foreground">
-              {content}
-            </pre>
-          ) : null}
+          {result ? renderResult(result) : null}
         </>
       )
     }
