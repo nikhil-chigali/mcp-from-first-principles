@@ -1,11 +1,22 @@
 import { Button } from "@/components/ui/button"
+import { ChatThread } from "@/components/ChatThread"
 import { LeftRail, type PrimitiveSelection } from "@/components/LeftRail"
+import { useChatThread } from "@/hooks/useChatThread"
 
 function App() {
+  const {
+    cards,
+    addToolCard,
+    addResourceCard,
+    addPromptCard,
+    submitForm,
+    cancelForm,
+  } = useChatThread()
+
   const handleSelect = (selection: PrimitiveSelection) => {
-    // Phase 3: log selections so we can verify wiring. Phase 4 replaces this
-    // with appending a card to the chat thread.
-    console.log("[mcp] selected", selection)
+    if (selection.kind === "tool") addToolCard(selection.tool)
+    else if (selection.kind === "resource") addResourceCard(selection.resource)
+    else addPromptCard(selection.prompt)
   }
 
   return (
@@ -13,7 +24,11 @@ function App() {
       <TopBar />
       <div className="flex min-h-0 flex-1">
         <LeftRail onSelect={handleSelect} />
-        <ChatThread />
+        <ChatThread
+          cards={cards}
+          onSubmitForm={submitForm}
+          onCancelForm={cancelForm}
+        />
       </div>
     </div>
   )
@@ -51,19 +66,6 @@ function ConnectionPill() {
       <span className="inline-block size-1.5 rounded-full bg-brand" />
       <span>connected</span>
     </div>
-  )
-}
-
-function ChatThread() {
-  return (
-    <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-      <div className="mx-auto w-full max-w-3xl px-10 py-20">
-        <p className="font-serif text-[17px] leading-relaxed text-muted-foreground">
-          No activity yet. Pick a tool, resource, or prompt from the left rail
-          to begin.
-        </p>
-      </div>
-    </main>
   )
 }
 
