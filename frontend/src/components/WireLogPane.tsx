@@ -31,7 +31,7 @@ export function WireLogPane({ events, onClear, onClose }: WireLogPaneProps) {
   }, [events])
 
   return (
-    <section className="flex h-[40vh] shrink-0 flex-col border-t border-border bg-background">
+    <section className="flex w-[460px] shrink-0 flex-col border-l border-border bg-background">
       <header className="flex h-9 shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 text-[10px] uppercase tracking-wider text-muted-foreground">
         <div className="flex items-center gap-3">
           <span className="font-medium text-foreground">Wire log</span>

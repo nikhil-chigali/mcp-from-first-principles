@@ -1,5 +1,5 @@
-import { useState } from "react"
-import type { ConnectionState } from "@/api"
+import { useEffect, useState } from "react"
+import { api, type ConnectionState } from "@/api"
 import { Button } from "@/components/ui/button"
 import { ChatThread } from "@/components/ChatThread"
 import { LeftRail, type PrimitiveSelection } from "@/components/LeftRail"
@@ -21,10 +21,24 @@ function App() {
   const connectionState = useConnectionState()
   const [paneOpen, setPaneOpen] = useState(false)
 
+  useEffect(() => {
+    if (!paneOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.defaultPrevented) return
+      if (e.key === "Escape") setPaneOpen(false)
+    }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
+  }, [paneOpen])
+
   const handleSelect = (selection: PrimitiveSelection) => {
     if (selection.kind === "tool") addToolCard(selection.tool)
     else if (selection.kind === "resource") addResourceCard(selection.resource)
     else addPromptCard(selection.prompt)
+  }
+
+  const handleReconnect = () => {
+    void api.simulateReconnect()
   }
 
   return (
@@ -34,6 +48,7 @@ function App() {
         onTogglePane={() => setPaneOpen((v) => !v)}
         eventCount={wireLog.events.length}
         connectionState={connectionState}
+        onReconnect={handleReconnect}
       />
       <div className="flex min-h-0 flex-1">
         <LeftRail onSelect={handleSelect} />
@@ -42,14 +57,14 @@ function App() {
           onSubmitForm={submitForm}
           onCancelForm={cancelForm}
         />
+        {paneOpen && (
+          <WireLogPane
+            events={wireLog.events}
+            onClear={wireLog.clear}
+            onClose={() => setPaneOpen(false)}
+          />
+        )}
       </div>
-      {paneOpen && (
-        <WireLogPane
-          events={wireLog.events}
-          onClear={wireLog.clear}
-          onClose={() => setPaneOpen(false)}
-        />
-      )}
     </div>
   )
 }
@@ -59,6 +74,7 @@ interface TopBarProps {
   onTogglePane: () => void
   eventCount: number
   connectionState: ConnectionState
+  onReconnect: () => void
 }
 
 function TopBar({
@@ -66,6 +82,7 @@ function TopBar({
   onTogglePane,
   eventCount,
   connectionState,
+  onReconnect,
 }: TopBarProps) {
   return (
     <header className="flex h-11 shrink-0 items-center justify-between border-b border-border bg-background px-4">
@@ -79,7 +96,10 @@ function TopBar({
         </span>
       </div>
       <div className="flex items-center gap-4">
-        <ConnectionPill state={connectionState} />
+        <ConnectionPill
+          state={connectionState}
+          onReconnect={onReconnect}
+        />
         <Button
           variant="ghost"
           size="sm"
@@ -115,13 +135,28 @@ const CONNECTION_DOT: Record<ConnectionState, string> = {
   error: "bg-destructive",
 }
 
-function ConnectionPill({ state }: { state: ConnectionState }) {
+interface ConnectionPillProps {
+  state: ConnectionState
+  onReconnect: () => void
+}
+
+function ConnectionPill({ state, onReconnect }: ConnectionPillProps) {
   return (
     <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
       <span
         className={`inline-block size-1.5 rounded-full ${CONNECTION_DOT[state]}`}
       />
       <span>{CONNECTION_LABEL[state]}</span>
+      <button
+        type="button"
+        onClick={onReconnect}
+        disabled={state === "reconnecting"}
+        title="Simulate reconnect"
+        aria-label="Simulate reconnect"
+        className="ml-1 text-[13px] leading-none text-muted-foreground/60 transition-colors hover:text-foreground disabled:opacity-40 disabled:hover:text-muted-foreground/60"
+      >
+        ↻
+      </button>
     </div>
   )
 }

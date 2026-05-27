@@ -23,17 +23,30 @@ function resourceKey(r: Resource): string {
 export function LeftRail({ onSelect }: LeftRailProps) {
   const { data, loading, error } = useServerInfo()
 
+  const isFullyEmpty =
+    data !== null &&
+    data.tools.length === 0 &&
+    data.resources.length === 0 &&
+    data.prompts.length === 0
+
   return (
     <aside className="w-[280px] shrink-0 overflow-y-auto border-r border-border bg-background">
       {loading && (
-        <p className="px-5 py-5 text-[12px] text-muted-foreground">Loading…</p>
-      )}
-      {error && (
-        <p className="px-5 py-5 text-[12px] text-destructive">
-          Failed to load: {error.message}
+        <p className="px-5 py-5 font-serif text-[13px] italic text-muted-foreground">
+          Loading primitives…
         </p>
       )}
-      {data && (
+      {error && (
+        <p className="px-5 py-5 font-serif text-[13px] italic text-destructive">
+          Couldn't load primitives: {error.message}
+        </p>
+      )}
+      {data && isFullyEmpty && (
+        <p className="px-5 py-5 font-serif text-[13px] italic text-muted-foreground">
+          Connected, but this server doesn't expose any primitives yet.
+        </p>
+      )}
+      {data && !isFullyEmpty && (
         <nav className="flex flex-col py-5">
           <PrimitiveList
             title="Tools"
@@ -55,7 +68,9 @@ export function LeftRail({ onSelect }: LeftRailProps) {
               description: r.description,
             }))}
             onSelect={(key) => {
-              const resource = data.resources.find((r) => resourceKey(r) === key)
+              const resource = data.resources.find(
+                (r) => resourceKey(r) === key,
+              )
               if (resource) onSelect({ kind: "resource", resource })
             }}
           />
